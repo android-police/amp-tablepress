@@ -3,7 +3,7 @@
  * Plugin Name: AMP TablePress
  *
  * @package   AMP_TablePress
- * @author    Weston Ruter, Google
+ * @author    Weston Ruter, Google, Android Police
  * @license   GPL-2.0-or-later
  * @copyright 2019 Google Inc.
  *
@@ -11,8 +11,8 @@
  * Plugin Name: AMP TablePress
  * Description: Adding AMP compatibility on top of the TablePress plugin.
  * Plugin URI:  https://github.com/westonruter/amp-tablepress
- * Version:     0.1.4
- * Author:      Weston Ruter, Google
+ * Version:     0.1.5
+ * Author:      Weston Ruter, Google, Android Police
  * Author URI:  https://weston.ruter.net/
  * License:     GNU General Public License v2 (or later)
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,7 @@
 
 namespace AMP_TablePress;
 
-const PLUGIN_VERSION = '0.1.4';
+const PLUGIN_VERSION = '0.1.5';
 
 const DEVELOPMENT_MODE = true; // This is automatically rewritten to false during dist build.
 
@@ -137,31 +137,35 @@ function wrap_tablepress_table_output_with_amp_script( $output, $table, $render_
 	// @todo Hande: datatables_custom_commands.
 	// Note that scrollx is not supported
 	$render_options['simple_datatables'] = [
-		'fixedColumns'  => true,
-		'sortable'      => $render_options['datatables_sort'],
-		'paging'        => $render_options['datatables_paginate'],
-		'perPage'       => $render_options['datatables_paginate_entries'],
-		'perPageSelect' => $render_options['datatables_lengthchange'] ? [ 10, 25, 50, 100 ] : false,
-		'searchable'    => $render_options['datatables_filter'],
-		'labels'        => [
+		'fixedColumns'  				=> true,
+		'print_name' 					=> $render_options['print_name'],
+		'print_name_position' 			=> $render_options['print_name_position'],
+		'print_description' 			=> $render_options['print_description'],
+		'print_description_position' 	=> $render_options['print_description_position'],
+		'sortable'      				=> $render_options['datatables_sort'],
+		'paging'       					=> $render_options['datatables_paginate'],
+		'perPage'       				=> $render_options['datatables_paginate_entries'],
+		'perPageSelect' 				=> $render_options['datatables_lengthchange'] ? [ 10, 25, 50, 100 ] : false,
+		'searchable'    				=> $render_options['datatables_filter'],
+		'labels'        				=> [
 			'placeholder' => __( 'Search...', 'amp-tablepress' ),
 			'perPage'     => __( 'Show {select} entries', 'amp-tablepress' ),
 			'noRows'      => __( 'No matching records found', 'amp-tablepress' ),
 			'info'        => __( 'Showing {start} to {end} of {rows} entries', 'amp-tablepress' ),
 		],
-		'scrollY'       => $render_options['datatables_scrolly'],
-		'layout'        => [
+		'scrollY'       				=> $render_options['datatables_scrolly'],
+		'layout'        				=> [
 			'top'    => '{select}{search}',
 			'bottom' => $render_options['datatables_info'] ? '{info}{pager}' : '{pager}',
 		],
 		// Note that entity decoding is needed due to WorkerDOM limitation: <https://github.com/ampproject/worker-dom/issues/613>.
-		'prevText'      => html_entity_decode( '&lsaquo;', ENT_HTML5, 'UTF-8' ),
-		'nextText'      => html_entity_decode( '&rsaquo;', ENT_HTML5, 'UTF-8' ),
-		'ascText'       => html_entity_decode( '&#x25b2;', ENT_HTML5, 'UTF-8' ), // Also &blacktriangleup;.
-		'descText'      => html_entity_decode( '&#x25bc;', ENT_HTML5, 'UTF-8' ), // Also &blacktriangledown;.
-		'truncatePager' => false, // @todo Not supported as true.
-		'firstLast'     => false, // @todo Not yet supported as true.
-		'columns'       => false, // Disabled.
+		'prevText'      				=> html_entity_decode( '&lsaquo;', ENT_HTML5, 'UTF-8' ),
+		'nextText'      				=> html_entity_decode( '&rsaquo;', ENT_HTML5, 'UTF-8' ),
+		'ascText'       				=> html_entity_decode( '&#x25b2;', ENT_HTML5, 'UTF-8' ), // Also &blacktriangleup;.
+		'descText'      				=> html_entity_decode( '&#x25bc;', ENT_HTML5, 'UTF-8' ), // Also &blacktriangledown;.
+		'truncatePager' 				=> false, // @todo Not supported as true.
+		'firstLast'     				=> false, // @todo Not yet supported as true.
+		'columns'       				=> false, // Disabled.
 	];
 
 	$wrapper_classes = [ 'dataTable-wrapper' ];
@@ -181,13 +185,32 @@ function wrap_tablepress_table_output_with_amp_script( $output, $table, $render_
 		$wrapper_classes[] = 'fixed-columns';
 	}
 
+	if ( $render_options['print_name'] ) {
+		$print_name_html = sprintf( '<h2 class="dataTable-name">%s</h2>', esc_html( $table['name'] ) );
+	}
+	if ( $render_options['print_description'] ) {
+		$print_description_html = sprintf( '<p class="dataTable-description">%s</p>', esc_html( $table['description'] ) );
+	}
+
 	$wrapper  = sprintf( '<div class="%s">', esc_attr( implode( ' ', $wrapper_classes ) ) );
+	if ( $render_options['print_name'] && 'above' === $render_options['print_name_position'] ) {
+		$wrapper .= $print_name_html;
+	}
+	if ( $render_options['print_description'] && 'above' === $render_options['print_description_position'] ) {
+		$wrapper .= $print_description_html;
+	}
 	$wrapper .= sprintf( '<div class="dataTable-top">%s</div>', $render_options['simple_datatables']['layout']['top'] );
 	$wrapper .= sprintf(
 		'<div class="dataTable-container" %s>{table}</div>',
 		$render_options['simple_datatables']['scrollY'] ? sprintf( ' style="%s"', esc_attr( 'overflow-y: auto; height:' . $render_options['simple_datatables']['scrollY'] ) ) : ''
 	);
 	$wrapper .= sprintf( '<div class="dataTable-bottom">%s</div>', $render_options['simple_datatables']['layout']['bottom'] );
+	if ( $render_options['print_name'] && 'below' === $render_options['print_name_position'] ) {
+		$wrapper .= $print_name_html;
+	}
+	if ( $render_options['print_description'] && 'below' === $render_options['print_description_position'] ) {
+		$wrapper .= $print_description_html;
+	}
 	$wrapper .= '</div>';
 
 	// Info placement.
@@ -195,8 +218,9 @@ function wrap_tablepress_table_output_with_amp_script( $output, $table, $render_
 	if ( $render_options['simple_datatables']['paging'] ) {
 		$info = $render_options['simple_datatables']['labels']['info'];
 		$info = str_replace( '{start}', '1', $info );
-		$info = str_replace( '{end}', $render_options['simple_datatables']['perPage'], $info );
+		$info = str_replace( '{end}', min( $render_options['simple_datatables']['perPage'], count( $table['data'] ) - 1), $info );
 		$info = str_replace( '{rows}', count( $table['data'] ) - 1, $info ); // The 1 is for the header row.
+		$info = '<div class="dataTable-info">' . $info . '</div>';
 	}
 	$wrapper = str_replace( '{info}', $info, $wrapper );
 
@@ -303,6 +327,22 @@ function prerender_table( $table_html, $table_data, $render_options ) {
 
 	$xpath = new \DOMXPath( $dom );
 
+	/**
+	 * Remove table name and table description from table output
+	 */
+	if( $render_options['print_name'] ){
+		$table_name = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " tablepress-table-name ")]')->item(0);
+		if($table_name){
+			$table_name->parentNode->removeChild($table_name);
+		}
+	}
+	
+	if ( $render_options['print_description'] ) {
+		$table_description = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " tablepress-table-description ")]')->item(0);
+		if($table_description){
+			$table_description->parentNode->removeChild($table_description);
+		}
+	}
 	/**
 	 * Elements.
 	 *
