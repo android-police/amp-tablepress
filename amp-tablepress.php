@@ -11,7 +11,7 @@
  * Plugin Name: AMP TablePress
  * Description: Adding AMP compatibility on top of the TablePress plugin.
  * Plugin URI:  https://github.com/westonruter/amp-tablepress
- * Version:     0.1.5
+ * Version:     0.1.4.2
  * Author:      Weston Ruter, Google, Android Police
  * Author URI:  https://weston.ruter.net/
  * License:     GNU General Public License v2 (or later)
@@ -20,7 +20,7 @@
 
 namespace AMP_TablePress;
 
-const PLUGIN_VERSION = '0.1.5';
+const PLUGIN_VERSION = '0.1.4.2';
 
 const DEVELOPMENT_MODE = true; // This is automatically rewritten to false during dist build.
 
@@ -256,22 +256,25 @@ function wrap_tablepress_table_output_with_amp_script( $output, $table, $render_
 		);
 	}
 	$wrapper = str_replace( '{search}', $search_input, $wrapper );
-
-	$pagination = '<div class="dataTable-pagination"><ul>';
-	$page_count = ceil( ( count( $table['data'] ) - 1 ) / $render_options['simple_datatables']['perPage'] ); // The 1 is for the header row.
-	if ( $page_count > 1 ) {
-		$pagination .= sprintf( '<li class="pager"><a role="button" tabindex="0" data-page="1">%s</a></li>', $render_options['simple_datatables']['prevText'] );
-		for ( $i = 1; $i <= $page_count; $i++ ) {
-			$pagination .= sprintf(
-				'<li class="%s"></li><a role="button" tabindex="0" data-page="%d">%d</a></li>',
-				esc_attr( 1 === $i ? 'active' : '' ),
-				$i,
-				$i
-			);
+	
+	$pagination = '';
+	if( $render_options['simple_datatables']['paging'] ) {
+		$pagination = '<div class="dataTable-pagination"><ul>';
+		$page_count = ceil( ( count( $table['data'] ) - 1 ) / $render_options['simple_datatables']['perPage'] ); // The 1 is for the header row.
+		if ( $page_count > 1 ) {
+			$pagination .= sprintf( '<li class="pager"><a role="button" tabindex="0" data-page="1">%s</a></li>', $render_options['simple_datatables']['prevText'] );
+			for ( $i = 1; $i <= $page_count; $i++ ) {
+				$pagination .= sprintf(
+					'<li class="%s"></li><a role="button" tabindex="0" data-page="%d">%d</a></li>',
+					esc_attr( 1 === $i ? 'active' : '' ),
+					$i,
+					$i
+				);
+			}
+			$pagination .= sprintf( '<li class="pager"><a role="button" tabindex="0" data-page="%d">%s</a></li>', $page_count, $render_options['simple_datatables']['nextText'] );
 		}
-		$pagination .= sprintf( '<li class="pager"><a role="button" tabindex="0" data-page="%d">%s</a></li>', $page_count, $render_options['simple_datatables']['nextText'] );
+		$pagination .= '</ul></div>';
 	}
-	$pagination .= '</ul></div>';
 
 	$wrapper = str_replace( '{pager}', $pagination, $wrapper );
 
