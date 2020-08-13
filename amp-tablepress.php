@@ -257,7 +257,7 @@ function wrap_tablepress_table_output_with_amp_script( $output, $table, $render_
 	}
 	$wrapper = str_replace( '{search}', $search_input, $wrapper );
 	
-	$pagination = '';
+	$pagination = '<div class="dataTable-pagination hidden" hidden><ul><li class="pager"><a role="button" tabindex="0" data-page="1">1</a></li></ul></div>';
 	if( $render_options['simple_datatables']['paging'] ) {
 		$pagination = '<div class="dataTable-pagination"><ul>';
 		$page_count = ceil( ( count( $table['data'] ) - 1 ) / $render_options['simple_datatables']['perPage'] ); // The 1 is for the header row.
